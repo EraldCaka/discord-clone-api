@@ -22,7 +22,7 @@ func (params CreateServerParams) Validate() map[string]string {
 	//TODO include all errors for each use case like Ownership, Members, Channels, Roles and AFKChannel
 	errors := map[string]string{}
 	if len(params.Description) > descriptionLen {
-		errors["description"] = fmt.Sprintf("lastName length should be at least %d characters", descriptionLen)
+		errors["description"] = fmt.Sprintf("description length should be at least %d characters", descriptionLen)
 	}
 	return errors
 }
