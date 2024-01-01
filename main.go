@@ -31,12 +31,20 @@ func main() {
 	}
 	app := fiber.New(config)
 	apiv1 := app.Group("/discord/api/v1")
-	userHandler := handlers.NewUserHandler(db.NewMongoUserStore(client))
+
+	var (
+		userHandler = handlers.NewUserHandler(db.NewMongoUserStore(client))
+	)
+	//user requests
+
 	apiv1.Put("/user/:id", userHandler.HandlePutUser)
 	apiv1.Delete("/user/:id", userHandler.HandleDeleteUser)
 	apiv1.Post("/user", userHandler.HandlePostUser)
 	apiv1.Get("/user", userHandler.HandleGetUsers)
 	apiv1.Get("/user/:id", userHandler.HandleGetUser)
+
+	//server requests
+
 	listenErr := app.Listen(*listenAddr)
 	if listenErr != nil {
 		return

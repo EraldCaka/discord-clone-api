@@ -21,10 +21,10 @@ type Message struct {
 }
 
 func (params CreateMessageParams) Validate() map[string]string {
-	//TODO include all errors for each use case like Ownership, Members, Channels, Roles and AFKChannel
+	//TODO
 	errors := map[string]string{}
 	if len(params.Content) > messageLen {
-		errors["description"] = fmt.Sprintf("description length should be at least %d characters", messageLen)
+		errors["content"] = fmt.Sprintf("content length should be at least %d characters", messageLen)
 	}
 	return errors
 }

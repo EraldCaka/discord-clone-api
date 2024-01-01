@@ -71,7 +71,7 @@ type User struct {
 	Email             string             `bson:"email" json:"email"`
 }
 
-func NewUserFromParams(params CreateUserParams) (*User, error) {
+func NewUser(params CreateUserParams) (*User, error) {
 	encpw, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcryptCost)
 	if err != nil {
 		return nil, err

@@ -8,14 +8,14 @@ import (
 const descriptionLimit = 100
 
 type CreateServerParams struct {
-	ServerName  string    `json:"serverName" validate:"required"`
-	Owner       User      `json:"owner"`
-	Members     []User    `json:"members"`
-	Channels    []Channel `json:"channels"`
-	Roles       []Role    `json:"roles"`
-	Region      string    `json:"region" validate:"required"`
-	AfkChannel  Channel   `json:"afkChannel"`
-	Description string    `json:"description"`
+	ServerName  string             `json:"serverName" validate:"required"`
+	UserID      primitive.ObjectID `json:"userID,omitempty"`
+	Members     []User             `json:"members"`
+	Channels    []Channel          `json:"channels"`
+	Roles       []Role             `json:"roles"`
+	Region      string             `json:"region" validate:"required"`
+	AfkChannel  Channel            `json:"afkChannel"`
+	Description string             `json:"description"`
 }
 
 func (params CreateServerParams) Validate() map[string]string {
@@ -29,7 +29,7 @@ func (params CreateServerParams) Validate() map[string]string {
 
 type Server struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
-	Owner       User               `bson:"owner" json:"owner"`
+	UserID      primitive.ObjectID `bson:"userID,omitempty" json:"userID,omitempty"`
 	ServerName  string             `bson:"serverName" json:"serverName"`
 	Members     []User             `bson:"members" json:"members"`
 	Channels    []Channel          `bson:"channels" json:"channels"`
@@ -42,7 +42,7 @@ type Server struct {
 func NewServer(params CreateServerParams) (*Server, error) {
 	return &Server{
 		ServerName:  params.ServerName,
-		Owner:       params.Owner,
+		UserID:      params.UserID,
 		Members:     params.Members,
 		Channels:    params.Channels,
 		Roles:       params.Roles,
