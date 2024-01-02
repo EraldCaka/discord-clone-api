@@ -13,8 +13,6 @@ import (
 	"log"
 )
 
-const dburi = "mongodb://localhost:27017"
-
 var config = fiber.Config{
 	ErrorHandler: func(c *fiber.Ctx, err error) error {
 		return c.JSON(map[string]string{"error": err.Error()})
@@ -25,25 +23,34 @@ func main() {
 	listenAddr := flag.String("listenAddr", ":5000", "The listen address of the API server")
 	flag.Parse()
 
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(dburi))
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(db.DBURI))
 	if err != nil {
 		log.Fatal(err)
 	}
 	app := fiber.New(config)
-	apiv1 := app.Group("/discord/api/v1")
+	api := app.Group("/discord/api/v1")
 
 	var (
-		userHandler = handlers.NewUserHandler(db.NewMongoUserStore(client))
+		userStore   = db.NewMongoUserStore(client)
+		serverStore = db.NewMongoServerStore(client, userStore)
+		store       = &db.Store{
+			User:   userStore,
+			Server: serverStore,
+		}
+		userHandler   = handlers.NewUserHandler(store)
+		serverHandler = handlers.NewServerHandler(serverStore)
 	)
-	//user requests
 
-	apiv1.Put("/user/:id", userHandler.HandlePutUser)
-	apiv1.Delete("/user/:id", userHandler.HandleDeleteUser)
-	apiv1.Post("/user", userHandler.HandlePostUser)
-	apiv1.Get("/user", userHandler.HandleGetUsers)
-	apiv1.Get("/user/:id", userHandler.HandleGetUser)
+	api.Get("/user/:id", userHandler.HandleGetUser)
+	api.Put("/user/:id", userHandler.HandlePutUser)
+	api.Delete("/user/:id", userHandler.HandleDeleteUser)
+	api.Post("/user", userHandler.HandlePostUser)
+	api.Get("/user", userHandler.HandleGetUsers)
 
-	//server requests
+	api.Delete("/server/:id", serverHandler.HandleDeleteServer)
+	api.Post("/server", serverHandler.HandleCreateServer)
+	api.Get("/server", serverHandler.HandleGetServers)
+	api.Get("/server/:id", serverHandler.HandleGetServer)
 
 	listenErr := app.Listen(*listenAddr)
 	if listenErr != nil {

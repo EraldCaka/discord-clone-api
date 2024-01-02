@@ -15,18 +15,20 @@ type ServerStore interface {
 	GetServers(context.Context) ([]*types.Server, error)
 	CreateServer(context.Context, *types.Server) (*types.Server, error)
 	DeleteServer(context.Context, string) error
-	//UpdateUser(ctx context.Context, filter bson.M, params types.UpdateServerParams) error
+	//UpdateServer(ctx context.Context, filter bson.M, params types.UpdateServerParams) error
 }
 
 type MongoServerStore struct {
 	client *mongo.Client
 	coll   *mongo.Collection
+	UserStore
 }
 
-func NewMongoServerStore(client *mongo.Client) *MongoServerStore {
+func NewMongoServerStore(client *mongo.Client, userStore UserStore) *MongoServerStore {
 	return &MongoServerStore{
-		client: client,
-		coll:   client.Database(DBNAME).Collection(serverColl),
+		client:    client,
+		coll:      client.Database(DBNAME).Collection(serverColl),
+		UserStore: userStore,
 	}
 }
 
@@ -72,6 +74,11 @@ func (s *MongoServerStore) CreateServer(ctx context.Context, server *types.Serve
 		return nil, err
 	}
 	server.ID = res.InsertedID.(primitive.ObjectID)
+	filter := bson.M{"_id": server.UserID} // verification if the user exists
+	update := bson.M{"$push": bson.M{"server": server.ID}}
+	if err := s.UserStore.Update(ctx, filter, update); err != nil {
+		return nil, err
+	}
 	return server, nil
 }
 
@@ -80,6 +87,7 @@ func (s *MongoServerStore) GetServers(ctx context.Context) ([]*types.Server, err
 	if err != nil {
 		return nil, err
 	}
+
 	var servers []*types.Server
 	if err := cur.All(ctx, &servers); err != nil {
 		return nil, err

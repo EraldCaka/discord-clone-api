@@ -21,15 +21,14 @@ type CreateServerParams struct {
 func (params CreateServerParams) Validate() map[string]string {
 	//TODO include all errors for each use case like Ownership, Members, Channels, Roles and AFKChannel
 	errors := map[string]string{}
-	if len(params.Description) > descriptionLen {
-		errors["description"] = fmt.Sprintf("description length should be at least %d characters", descriptionLen)
+	if len(params.Description) > descriptionLimit {
+		errors["description"] = fmt.Sprintf("description length should be at least %d characters", descriptionLimit)
 	}
 	return errors
 }
 
 type Server struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
-	UserID      primitive.ObjectID `bson:"userID,omitempty" json:"userID,omitempty"`
 	ServerName  string             `bson:"serverName" json:"serverName"`
 	Members     []User             `bson:"members" json:"members"`
 	Channels    []Channel          `bson:"channels" json:"channels"`
@@ -37,6 +36,7 @@ type Server struct {
 	Region      string             `bson:"regions" json:"regions"`
 	AfkChannel  Channel            `bson:"afkChannel" json:"afkChannel"`
 	Description string             `bson:"description" json:"description"`
+	UserID      primitive.ObjectID `bson:"userID,omitempty" json:"userID,omitempty"`
 }
 
 func NewServer(params CreateServerParams) (*Server, error) {

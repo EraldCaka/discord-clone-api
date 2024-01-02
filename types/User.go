@@ -37,7 +37,7 @@ type CreateUserParams struct {
 	Description string `json:"description"`
 	Email       string `json:"email"`
 	/*
-		TODO: need to add (status(enum), []friends, []servers, []blocked, []activities, nitro boolean,[]badges.
+		TODO: need to add (status(enum), []friends, []servers, []blocked, []activities, nitro boolean,[]badges, OwnedServers []Server.
 	*/
 }
 
@@ -64,15 +64,16 @@ func isEmailValid(email string) bool {
 }
 
 type User struct {
-	ID                primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
-	Username          string             `bson:"username" json:"username"`
-	EncryptedPassword string             `bson:"EncryptedPassword" json:"-"`
-	Description       string             `bson:"description" json:"description"`
-	Email             string             `bson:"email" json:"email"`
+	ID                primitive.ObjectID   `bson:"_id,omitempty" json:"id,omitempty"`
+	Username          string               `bson:"username" json:"username"`
+	EncryptedPassword string               `bson:"EncryptedPassword" json:"-"`
+	Description       string               `bson:"description" json:"description"`
+	Email             string               `bson:"email" json:"email"`
+	OwnedServers      []primitive.ObjectID `bson:"ownedServers" json:"ownedServers"` // identification of owned servers
 }
 
 func NewUser(params CreateUserParams) (*User, error) {
-	encpw, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcryptCost)
+	encryptedPassword, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcryptCost)
 	if err != nil {
 		return nil, err
 	}
@@ -80,6 +81,6 @@ func NewUser(params CreateUserParams) (*User, error) {
 		Username:          params.Username,
 		Description:       params.Description,
 		Email:             params.Email,
-		EncryptedPassword: string(encpw),
+		EncryptedPassword: string(encryptedPassword),
 	}, nil
 }
