@@ -5,8 +5,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const messageLen = 250
-
 type Message struct {
 	ID              primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	Content         string             `bson:"content" json:"content"`

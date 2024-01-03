@@ -22,7 +22,6 @@ func NewUserHandler(store *db.Store) *UserHandler {
 
 func (h *UserHandler) HandlePutUser(c *fiber.Ctx) error {
 	var (
-		//values bson.M
 		params types.UpdateUserParams
 		userID = c.Params("id")
 	)
@@ -48,7 +47,7 @@ func (h *UserHandler) HandleDeleteUser(c *fiber.Ctx) error {
 	return c.JSON(map[string]string{"deleted": userID})
 }
 
-func (h *UserHandler) HandlePostUser(c *fiber.Ctx) error {
+func (h *UserHandler) HandleCreateUser(c *fiber.Ctx) error {
 	var params types.CreateUserParams
 	if err := c.BodyParser(&params); err != nil {
 		return err

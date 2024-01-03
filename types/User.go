@@ -8,13 +8,6 @@ import (
 	"regexp"
 )
 
-const (
-	bcryptCost      = 12
-	minFirstNameLen = 3
-	descriptionLen  = 100
-	minPasswordLen  = 7
-)
-
 type UpdateUserParams struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -32,10 +25,11 @@ func (p UpdateUserParams) ToBSON() bson.M {
 }
 
 type CreateUserParams struct {
-	Username    string `json:"Username"`
-	Password    string `json:"password"`
-	Description string `json:"description"`
-	Email       string `json:"email"`
+	Username     string               `json:"Username"`
+	Password     string               `json:"password"`
+	Description  string               `json:"description"`
+	Email        string               `json:"email"`
+	OwnedServers []primitive.ObjectID `json:"ownedServers"`
 	/*
 		TODO: need to add (status(enum), []friends, []servers, []blocked, []activities, nitro boolean,[]badges, OwnedServers []Server.
 	*/
@@ -43,8 +37,8 @@ type CreateUserParams struct {
 
 func (params CreateUserParams) Validate() map[string]string {
 	errors := map[string]string{}
-	if len(params.Username) < minFirstNameLen {
-		errors["username"] = fmt.Sprintf("username length should be at least %d characters", minFirstNameLen)
+	if len(params.Username) < minUsernameLen {
+		errors["username"] = fmt.Sprintf("username length should be at least %d characters", minUsernameLen)
 	}
 	if len(params.Description) > descriptionLen {
 		errors["description"] = fmt.Sprintf("description length should be at least %d characters", descriptionLen)
@@ -73,7 +67,7 @@ type User struct {
 }
 
 func NewUser(params CreateUserParams) (*User, error) {
-	encryptedPassword, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcryptCost)
+	encryptedPassword, err := bcrypt.GenerateFromPassword([]byte(params.Password), passwordEncryptionLevel)
 	if err != nil {
 		return nil, err
 	}
@@ -82,5 +76,6 @@ func NewUser(params CreateUserParams) (*User, error) {
 		Description:       params.Description,
 		Email:             params.Email,
 		EncryptedPassword: string(encryptedPassword),
+		OwnedServers:      params.OwnedServers,
 	}, nil
 }

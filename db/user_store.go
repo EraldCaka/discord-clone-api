@@ -9,8 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-const userColl = "users"
-
 type UserStore interface {
 	GetUserByID(context.Context, string) (*types.User, error)
 	GetUsers(context.Context) ([]*types.User, error)
@@ -18,6 +16,7 @@ type UserStore interface {
 	DeleteUser(context.Context, string) error
 	UpdateUser(ctx context.Context, filter bson.M, params types.UpdateUserParams) error
 	Update(ctx context.Context, filter bson.M, update bson.M) error
+	Delete(ctx context.Context, userID primitive.ObjectID, serverID primitive.ObjectID) error
 }
 
 type MongoUserStore struct {
@@ -28,11 +27,17 @@ type MongoUserStore struct {
 func NewMongoUserStore(client *mongo.Client) *MongoUserStore {
 	return &MongoUserStore{
 		client: client,
-		coll:   client.Database(DBNAME).Collection(userColl),
+		coll:   client.Database(DBNAME).Collection(User),
 	}
 }
 
 func (s *MongoUserStore) Update(ctx context.Context, filter bson.M, update bson.M) error {
+	_, err := s.coll.UpdateOne(ctx, filter, update)
+	return err
+}
+func (s *MongoUserStore) Delete(ctx context.Context, userID primitive.ObjectID, serverID primitive.ObjectID) error {
+	filter := bson.M{"_id": userID}
+	update := bson.M{"$pull": bson.M{"ownedServers": serverID}}
 	_, err := s.coll.UpdateOne(ctx, filter, update)
 	return err
 }
