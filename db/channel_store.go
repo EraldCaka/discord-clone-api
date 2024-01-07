@@ -26,7 +26,7 @@ type MongoChannelStore struct {
 func NewMongoChannelStore(client *mongo.Client, serverStore ServerStore) *MongoChannelStore {
 	return &MongoChannelStore{
 		client:      client,
-		coll:        client.Database(DBNAME).Collection(Channel),
+		coll:        client.Database(DBNAME).Collection(CHANNEL),
 		ServerStore: serverStore,
 	}
 }

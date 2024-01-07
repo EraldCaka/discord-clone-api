@@ -1,15 +1,15 @@
 package db
 
 const (
-	User           = "user"
-	Server         = "server"
-	Channel        = "channel"
-	Message        = "message"
-	Activity       = "activity"
-	Emoji          = "emoji"
-	Configurations = "configuration"
-	Permissions    = "permission"
-	Reaction       = "reaction"
-	Role           = "role"
-	Badge          = "badge"
+	USER          = "user"
+	SERVER        = "server"
+	CHANNEL       = "channel"
+	MESSAGE       = "message"
+	ACTIVITY      = "activity"
+	EMOJI         = "emoji"
+	CONFIGURATION = "configuration"
+	PERMISSION    = "permission"
+	REACTION      = "reaction"
+	ROLE          = "role"
+	BADGE         = "badge"
 )
