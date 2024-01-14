@@ -31,15 +31,17 @@ func (p UpdateChannelParams) ToBSON() bson.M {
 type CreateChannelParams struct {
 	ServerID    primitive.ObjectID   `json:"serverID"`
 	Users       []primitive.ObjectID `json:"users"`
+	Messages    []primitive.ObjectID `json:"messages"`
 	ChannelName string               `json:"channelName"`
 	Type        bool                 `json:"type"`
 	Description string               `json:"description"`
 	Nsfw        bool                 `json:"nsfw"`
 }
 type Channel struct {
-	ID          primitive.ObjectID   `bson:"_if,omitempty" json:"id,omitempty"`
+	ID          primitive.ObjectID   `bson:"_id,omitempty" json:"id,omitempty"`
 	ServerID    primitive.ObjectID   `bson:"serverID,omitempty" json:"serverID,omitempty"`
 	Users       []primitive.ObjectID `bson:"users" json:"users"`
+	Messages    []primitive.ObjectID `bson:"messages" json:"messages"`
 	ChannelName string               `bson:"channelName" json:"channelName"`
 	Type        bool                 `bson:"type" json:"type"`
 	Description string               `bson:"description" json:"description"`
@@ -57,6 +59,7 @@ func NewChannel(params CreateChannelParams) (*Channel, error) {
 	return &Channel{
 		ServerID:    params.ServerID,
 		Users:       params.Users,
+		Messages:    params.Messages,
 		ChannelName: params.ChannelName,
 		Type:        params.Type,
 		Description: params.Description,

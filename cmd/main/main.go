@@ -32,6 +32,7 @@ func main() {
 		userStore    = db.NewMongoUserStore(client)
 		serverStore  = db.NewMongoServerStore(client, userStore)
 		channelStore = db.NewMongoChannelStore(client, serverStore)
+		messageStore = db.NewMongoMessageStore(client, channelStore, userStore)
 		store        = &db.Store{
 			User:   userStore,
 			Server: serverStore,
@@ -39,10 +40,12 @@ func main() {
 		userHandler    = handlers.NewUserHandler(store)
 		serverHandler  = handlers.NewServerHandler(serverStore)
 		channelHandler = handlers.NewChannelHandler(channelStore)
+		messageHandler = handlers.NewMessageHandler(messageStore)
 	)
 	routes.UserRoutes(app, userHandler)
 	routes.ServerRoutes(app, serverHandler)
 	routes.ChannelRoutes(app, channelHandler)
+	routes.MessageRoutes(app, messageHandler)
 
 	listenErr := app.Listen(*listenAddr)
 	if listenErr != nil {

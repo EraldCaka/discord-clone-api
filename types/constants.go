@@ -1,7 +1,7 @@
 package types
 
 const (
-	passwordEncryptionLevel = 12
+	passwordEncryptionLevel = 12 //bcrypt
 	minUsernameLen          = 3
 	descriptionLen          = 100
 	minPasswordLen          = 7

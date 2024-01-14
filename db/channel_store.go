@@ -14,6 +14,9 @@ type ChannelStore interface {
 	GetChannels(context.Context) ([]*types.Channel, error)
 	CreateChannel(context.Context, *types.Channel) (*types.Channel, error)
 	DeleteChannel(context.Context, string) error
+	Update(ctx context.Context, filter bson.M, update bson.M) error
+	Delete(ctx context.Context, channelID primitive.ObjectID, messageID primitive.ObjectID) error
+
 	//UpdateChannel(ctx context.Context, filter bson.M, params types.UpdateChannelParams) error
 }
 
@@ -30,6 +33,19 @@ func NewMongoChannelStore(client *mongo.Client, serverStore ServerStore) *MongoC
 		ServerStore: serverStore,
 	}
 }
+
+func (s *MongoChannelStore) Update(ctx context.Context, filter bson.M, update bson.M) error {
+	_, err := s.coll.UpdateOne(ctx, filter, update) // CHECKING THE CHANNEL VALUES
+	return err
+
+}
+func (s *MongoChannelStore) Delete(ctx context.Context, channelID primitive.ObjectID, messageID primitive.ObjectID) error {
+	filter := bson.M{"_id": channelID}
+	update := bson.M{"$pull": bson.M{"messages": messageID}}
+	_, err := s.coll.UpdateOne(ctx, filter, update)
+	return err
+}
+
 func (s *MongoChannelStore) GetChannelByID(ctx context.Context, id string) (*types.Channel, error) {
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {

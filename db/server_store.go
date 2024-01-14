@@ -14,7 +14,7 @@ type ServerStore interface {
 	CreateServer(context.Context, *types.Server) (*types.Server, error)
 	DeleteServer(context.Context, string) error
 	Update(ctx context.Context, filter bson.M, update bson.M) error
-	Delete(ctx context.Context, userID primitive.ObjectID, channelID primitive.ObjectID) error
+	Delete(ctx context.Context, serverID primitive.ObjectID, channelID primitive.ObjectID) error
 
 	//UpdateServer(ctx context.Context, filter bson.M, params types.UpdateServerParams) error
 }
@@ -38,7 +38,7 @@ func (s *MongoServerStore) Update(ctx context.Context, filter bson.M, update bso
 }
 func (s *MongoServerStore) Delete(ctx context.Context, serverID primitive.ObjectID, channelID primitive.ObjectID) error {
 	filter := bson.M{"_id": serverID}
-	update := bson.M{"$pull": bson.M{"ownedServers": channelID}}
+	update := bson.M{"$pull": bson.M{"channels": channelID}}
 	_, err := s.coll.UpdateOne(ctx, filter, update)
 	return err
 }
@@ -94,7 +94,7 @@ func (s *MongoServerStore) CreateServer(ctx context.Context, server *types.Serve
 	}
 	server.ID = res.InsertedID.(primitive.ObjectID)
 	filter := bson.M{"_id": server.UserID}
-	update := bson.M{"$push": bson.M{"ownedServers": res.InsertedID}}
+	update := bson.M{"$push": bson.M{"channels": res.InsertedID}}
 	if err := s.UserStore.Update(ctx, filter, update); err != nil {
 		return nil, err
 	}
