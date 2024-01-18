@@ -22,3 +22,20 @@ func AddUser(store *db.Store, userName, password, description, email string) *ty
 	}
 	return insertedUser
 }
+
+func AddServer(store *db.Store, serverName string, userID primitive.ObjectID, region, afkChannel, description string) *types.Server {
+	server, err := types.NewServer(types.CreateServerParams{
+		ServerName:  serverName,
+		UserID:      userID,
+		Members:     []types.User{},
+		Roles:       []types.Role{},
+		Region:      region,
+		AfkChannel:  afkChannel,
+		Description: description,
+	})
+	insertedServer, err := store.Server.CreateServer(context.TODO(), server)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return insertedServer
+}
