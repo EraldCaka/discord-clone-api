@@ -6,6 +6,8 @@ const (
 )
 
 type Store struct {
-	User   UserStore
-	Server ServerStore
+	User    UserStore
+	Server  ServerStore
+	Channel ChannelStore
+	Message MessageStore
 }
