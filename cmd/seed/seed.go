@@ -10,8 +10,6 @@ import (
 	"strconv"
 )
 
-var ()
-
 func main() {
 	var (
 		ctx           = context.Background()
