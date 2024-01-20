@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"github.com/EraldCaka/discord-clone-api/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -12,7 +13,7 @@ type ServerStore interface {
 	GetServerByID(context.Context, string) (*types.Server, error)
 	GetServers(context.Context) ([]*types.Server, error)
 	CreateServer(context.Context, *types.Server) (*types.Server, error)
-	DeleteServer(context.Context, string) error
+	DeleteServer(ctx context.Context, client *mongo.Client, id string) error
 	Update(ctx context.Context, filter bson.M, update bson.M) error
 	Delete(ctx context.Context, serverID primitive.ObjectID, channelID primitive.ObjectID) error
 	//UpdateServer(ctx context.Context, filter bson.M, params types.UpdateServerParams) error
@@ -69,11 +70,28 @@ func (s *MongoServerStore) GetServerByID(ctx context.Context, id string) (*types
 //	return nil
 //}
 
-func (s *MongoServerStore) DeleteServer(ctx context.Context, id string) error {
+func (s *MongoServerStore) DeleteServer(ctx context.Context, client *mongo.Client, id string) error {
 	serverID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
+	server, err := s.GetServerByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if _, err := client.Database(NAME).Collection(MESSAGE).DeleteMany(
+		ctx,
+		bson.M{"channelID": bson.M{"$in": server.Channels}},
+	); err != nil {
+		return err
+	}
+	if _, err := client.Database(NAME).Collection(CHANNEL).DeleteMany(
+		ctx,
+		bson.M{"serverID": server.ID},
+	); err != nil {
+		return err
+	}
+	fmt.Println("Deleted server:", server.ID.Hex())
 	res, err := s.GetServerByID(ctx, id)
 	if err := s.UserStore.Delete(ctx, res.UserID, serverID); err != nil {
 		return err
@@ -84,6 +102,7 @@ func (s *MongoServerStore) DeleteServer(ctx context.Context, id string) error {
 	}
 	return nil
 }
+
 func (s *MongoServerStore) CreateServer(ctx context.Context, server *types.Server) (*types.Server, error) {
 	_, userDoesntExist := s.UserStore.GetUserByID(ctx, server.UserID.Hex())
 	if userDoesntExist != nil {

@@ -5,6 +5,7 @@ import (
 	"flag"
 	"github.com/EraldCaka/discord-clone-api/db"
 	"github.com/EraldCaka/discord-clone-api/handlers"
+	"github.com/EraldCaka/discord-clone-api/pkg/errors"
 	"github.com/EraldCaka/discord-clone-api/pkg/routes"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -12,10 +13,8 @@ import (
 	"log"
 )
 
-var configs = fiber.Config{
-	ErrorHandler: func(c *fiber.Ctx, err error) error {
-		return c.JSON(map[string]string{"error": err.Error()})
-	},
+var config = fiber.Config{
+	ErrorHandler: errors.ErrorHandler,
 }
 
 func main() {
@@ -26,7 +25,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	app := fiber.New(configs)
+	app := fiber.New(config)
 
 	var (
 		userStore    = db.NewMongoUserStore(client)
