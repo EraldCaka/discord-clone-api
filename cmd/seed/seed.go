@@ -35,10 +35,10 @@ func main() {
 		Channel: channelStore,
 		Message: messageStore,
 	}
-	PopulateUserTable(store, client)
+	PopulateUserTable(store)
 }
 
-func PopulateUserTable(store *db.Store, client *mongo.Client) {
+func PopulateUserTable(store *db.Store) {
 	for i := 0; i < 20; i++ {
 		user := fixtures.AddUser(store, "user"+strconv.Itoa(i), "test1234"+strconv.Itoa(i), "I am a user", "test"+strconv.Itoa(i)+"@gmail.com")
 		log.Println(user.Username, "was created successfully")
@@ -47,7 +47,7 @@ func PopulateUserTable(store *db.Store, client *mongo.Client) {
 	}
 
 }
-func AddServerOwnerID(userStore *db.MongoUserStore, serverID primitive.ObjectID, userID primitive.ObjectID) {
+func _AddServerOwnerID(userStore *db.MongoUserStore, serverID primitive.ObjectID, userID primitive.ObjectID) {
 
 	userFilter := bson.M{"_id": userID}
 	userUpdate := bson.M{"$push": bson.M{"ownedServers": serverID}}
