@@ -24,11 +24,12 @@ func AddUser(store *db.Store, userName, password, description, email string) *ty
 }
 
 func AddServer(store *db.Store, serverName string, userID primitive.ObjectID, region, afkChannel, description string) *types.Server {
-	server, err := types.NewServer(types.CreateServerParams{
+	server, _ := types.NewServer(types.CreateServerParams{
 		ServerName:  serverName,
 		UserID:      userID,
 		Members:     []types.User{},
 		Roles:       []types.Role{},
+		Channels:    make([]primitive.ObjectID, 0),
 		Region:      region,
 		AfkChannel:  afkChannel,
 		Description: description,
@@ -38,4 +39,34 @@ func AddServer(store *db.Store, serverName string, userID primitive.ObjectID, re
 		log.Fatal(err)
 	}
 	return insertedServer
+}
+
+func AddChannel(store *db.Store, serverID primitive.ObjectID, channelName string, chanType bool, description string, nsfw bool) *types.Channel {
+	channel, _ := types.NewChannel(types.CreateChannelParams{
+		ServerID:    serverID,
+		Messages:    make([]primitive.ObjectID, 0),
+		ChannelName: channelName,
+		Type:        chanType,
+		Description: description,
+		Nsfw:        nsfw,
+	})
+	insertedChannel, err := store.Channel.CreateChannel(context.TODO(), channel)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return insertedChannel
+}
+func AddMessage(store *db.Store, channelID primitive.ObjectID, userID primitive.ObjectID, content string, mentionEveryone, pinned bool) *types.Message {
+	message, _ := types.NewMessage(types.CreateMessageParams{
+		ChannelID:       channelID,
+		UserID:          userID,
+		Content:         content,
+		MentionEveryone: mentionEveryone,
+		Pinned:          pinned,
+	})
+	insertedMessage, err := store.Message.CreateMessage(context.TODO(), message)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return insertedMessage
 }

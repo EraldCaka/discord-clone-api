@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"log"
 )
 
 type ChannelStore interface {
@@ -16,7 +17,7 @@ type ChannelStore interface {
 	DeleteChannel(context.Context, string) error
 	Update(ctx context.Context, filter bson.M, update bson.M) error
 	Delete(ctx context.Context, channelID primitive.ObjectID, messageID primitive.ObjectID) error
-
+	DeleteServerChannels(ctx context.Context, client *mongo.Client, serverID primitive.ObjectID, server *types.Server)
 	//UpdateChannel(ctx context.Context, filter bson.M, params types.UpdateChannelParams) error
 }
 
@@ -29,7 +30,7 @@ type MongoChannelStore struct {
 func NewMongoChannelStore(client *mongo.Client, serverStore ServerStore) *MongoChannelStore {
 	return &MongoChannelStore{
 		client:      client,
-		coll:        client.Database(DBNAME).Collection(CHANNEL),
+		coll:        client.Database(NAME).Collection(CHANNEL),
 		ServerStore: serverStore,
 	}
 }
@@ -46,6 +47,23 @@ func (s *MongoChannelStore) Delete(ctx context.Context, channelID primitive.Obje
 	return err
 }
 
+func (s *MongoChannelStore) DeleteServerChannels(ctx context.Context, client *mongo.Client, serverID primitive.ObjectID, server *types.Server) {
+	for _, channelID := range server.Channels {
+		if _, err := client.Database(NAME).Collection(MESSAGE).DeleteMany(
+			ctx,
+			bson.M{"channelID": channelID},
+		); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("deleted channelID:", channelID.Hex())
+	}
+	channelFilter := bson.M{"serverID": serverID}
+	_, err := s.coll.DeleteMany(ctx, channelFilter)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func (s *MongoChannelStore) GetChannelByID(ctx context.Context, id string) (*types.Channel, error) {
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -59,7 +77,6 @@ func (s *MongoChannelStore) GetChannelByID(ctx context.Context, id string) (*typ
 }
 func (s *MongoChannelStore) CreateChannel(ctx context.Context, channel *types.Channel) (*types.Channel, error) {
 	_, serverDoesntExist := s.ServerStore.GetServerByID(ctx, channel.ServerID.Hex())
-	fmt.Println(channel.ServerID)
 	if serverDoesntExist != nil {
 		return nil, serverDoesntExist
 	}

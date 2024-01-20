@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"github.com/EraldCaka/discord-clone-api/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -13,7 +14,7 @@ type UserStore interface {
 	GetUserByID(context.Context, string) (*types.User, error)
 	GetUsers(context.Context) ([]*types.User, error)
 	CreateUser(context.Context, *types.User) (*types.User, error)
-	DeleteUser(context.Context, string) error
+	DeleteUser(ctx context.Context, client *mongo.Client, server []*types.Server, user *types.User) error
 	UpdateUser(ctx context.Context, filter bson.M, params types.UpdateUserParams) error
 	Update(ctx context.Context, filter bson.M, update bson.M) error
 	Delete(ctx context.Context, userID primitive.ObjectID, serverID primitive.ObjectID) error
@@ -27,7 +28,7 @@ type MongoUserStore struct {
 func NewMongoUserStore(client *mongo.Client) *MongoUserStore {
 	return &MongoUserStore{
 		client: client,
-		coll:   client.Database(DBNAME).Collection(USER),
+		coll:   client.Database(NAME).Collection(USER),
 	}
 }
 
@@ -61,18 +62,7 @@ func (s *MongoUserStore) UpdateUser(ctx context.Context, filter bson.M, params t
 		},
 	}
 	_, err := s.coll.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
-func (s *MongoUserStore) DeleteUser(ctx context.Context, id string) error {
-	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return err
-	}
-	_, err = s.coll.DeleteOne(ctx, bson.M{"_id": oid})
 	if err != nil {
 		return err
 	}
@@ -98,4 +88,37 @@ func (s *MongoUserStore) GetUsers(ctx context.Context) ([]*types.User, error) {
 		return nil, err
 	}
 	return users, nil
+}
+func (s *MongoUserStore) DeleteUser(ctx context.Context, client *mongo.Client, servers []*types.Server, user *types.User) error {
+	for _, serverID := range user.OwnedServers {
+		for _, serverObj := range servers {
+			if serverObj.ID.Hex() == serverID.Hex() {
+				if _, err := client.Database(NAME).Collection(MESSAGE).DeleteMany(
+					ctx,
+					bson.M{"channelID": bson.M{"$in": serverObj.Channels}},
+				); err != nil {
+					return err
+				}
+				if _, err := client.Database(NAME).Collection(CHANNEL).DeleteMany(
+					ctx,
+					bson.M{"serverID": serverObj.ID},
+				); err != nil {
+					return err
+				}
+				if _, err := client.Database(NAME).Collection(SERVER).DeleteOne(
+					ctx,
+					bson.M{"_id": serverObj.ID},
+				); err != nil {
+					return err
+				}
+				fmt.Println("Deleted server:", serverObj.ID.Hex())
+				break
+			}
+		}
+	}
+	userFilter := bson.M{"_id": user.ID}
+	if _, err := s.coll.DeleteOne(ctx, userFilter); err != nil {
+		return err
+	}
+	return nil
 }

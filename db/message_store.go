@@ -27,7 +27,7 @@ type MongoMessageStore struct {
 func NewMongoMessageStore(client *mongo.Client, channelStore ChannelStore, userStore UserStore) *MongoMessageStore {
 	return &MongoMessageStore{
 		client:       client,
-		coll:         client.Database(DBNAME).Collection(MESSAGE),
+		coll:         client.Database(NAME).Collection(MESSAGE),
 		ChannelStore: channelStore,
 		UserStore:    userStore,
 	}

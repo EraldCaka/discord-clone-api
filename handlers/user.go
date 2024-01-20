@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type UserHandler struct {
@@ -40,8 +41,14 @@ func (h *UserHandler) HandlePutUser(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) HandleDeleteUser(c *fiber.Ctx) error {
+	client, err := mongo.Connect(c.Context(), options.Client().ApplyURI(db.MONGODB))
 	userID := c.Params("id")
-	if err := h.store.User.DeleteUser(c.Context(), userID); err != nil {
+	userObj, err := h.store.User.GetUserByID(c.Context(), userID)
+	serverObj, err := h.store.Server.GetServers(c.Context())
+	if err != nil {
+		return c.JSON(map[string]string{"error": "user not found"})
+	}
+	if err := h.store.User.DeleteUser(c.Context(), client, serverObj, userObj); err != nil {
 		return err
 	}
 	return c.JSON(map[string]string{"deleted": userID})

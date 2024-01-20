@@ -5,6 +5,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+/*
+	update params
+	//Reactions       []Reaction   `json:"reactions"`
+*/
+
 type Message struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
 	ChannelID primitive.ObjectID `bson:"channelID,omitempty" json:"channelID,omitempty"`
@@ -34,7 +39,6 @@ type CreateMessageParams struct {
 	Content   string             `json:"content"`
 	//Channel         Channel            `json:"channel"`
 	//Attachments     []Attachment `json:"attachments"`
-	//Reactions       []Reaction   `json:"reactions"`
 	//Mentions        []User       `json:"mentions"`
 	//MentionRoles    []Role       `json:"mentionRoles"`
 	MentionEveryone bool `json:"mentionEveryone"`

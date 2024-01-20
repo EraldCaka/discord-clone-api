@@ -15,7 +15,6 @@ type ServerStore interface {
 	DeleteServer(context.Context, string) error
 	Update(ctx context.Context, filter bson.M, update bson.M) error
 	Delete(ctx context.Context, serverID primitive.ObjectID, channelID primitive.ObjectID) error
-
 	//UpdateServer(ctx context.Context, filter bson.M, params types.UpdateServerParams) error
 }
 
@@ -28,14 +27,16 @@ type MongoServerStore struct {
 func NewMongoServerStore(client *mongo.Client, userStore UserStore) *MongoServerStore {
 	return &MongoServerStore{
 		client:    client,
-		coll:      client.Database(DBNAME).Collection(SERVER),
+		coll:      client.Database(NAME).Collection(SERVER),
 		UserStore: userStore,
 	}
 }
+
 func (s *MongoServerStore) Update(ctx context.Context, filter bson.M, update bson.M) error {
 	_, err := s.coll.UpdateOne(ctx, filter, update)
 	return err
 }
+
 func (s *MongoServerStore) Delete(ctx context.Context, serverID primitive.ObjectID, channelID primitive.ObjectID) error {
 	filter := bson.M{"_id": serverID}
 	update := bson.M{"$pull": bson.M{"channels": channelID}}
