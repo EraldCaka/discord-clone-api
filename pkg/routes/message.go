@@ -5,9 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func MessageRoutes(a *fiber.App, messageHandler *handlers.MessageHandler) {
-	var route = a.Group("/discord/api/v1")
-
+func MessageRoutes(app *fiber.App, messageHandler *handlers.MessageHandler, route fiber.Router) {
 	route.Get("/message/:id", messageHandler.HandleGetMessage)
 	route.Delete("/message/:id", messageHandler.HandleDeleteMessage)
 	route.Post("/message", messageHandler.HandleCreateMessage)

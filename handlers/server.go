@@ -6,6 +6,7 @@ import (
 	"github.com/EraldCaka/discord-clone-api/types"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type ServerHandler struct {
@@ -52,8 +53,15 @@ func (h *ServerHandler) HandleCreateServer(c *fiber.Ctx) error {
 }
 
 func (h *ServerHandler) HandleDeleteServer(c *fiber.Ctx) error {
+	client, err := mongo.Connect(c.Context(), options.Client().ApplyURI(db.MONGODB))
+	if err != nil {
+		err := c.JSON(map[string]string{"deleted": err.Error()})
+		if err != nil {
+			return err
+		}
+	}
 	serverID := c.Params("id")
-	if err := h.serverStore.DeleteServer(c.Context(), serverID); err != nil {
+	if err := h.serverStore.DeleteServer(c.Context(), client, serverID); err != nil {
 		return err
 	}
 	return c.JSON(map[string]string{"deleted": serverID})

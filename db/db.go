@@ -2,7 +2,6 @@ package db
 
 import (
 	"github.com/joho/godotenv"
-	"go.mongodb.org/mongo-driver/mongo"
 	"log"
 	"os"
 )
@@ -25,16 +24,4 @@ func init() {
 	}
 	NAME = os.Getenv("MONGO_DB_NAME")
 	MONGODB = os.Getenv("MONGO_DB_URL")
-}
-
-type MongoStore struct {
-	client *mongo.Client
-	coll   *mongo.Collection
-}
-
-func NewMongoStore(client *mongo.Client, collection string) *MongoStore {
-	return &MongoStore{
-		client: client,
-		coll:   client.Database(NAME).Collection(collection),
-	}
 }

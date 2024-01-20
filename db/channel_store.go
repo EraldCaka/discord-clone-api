@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"github.com/EraldCaka/discord-clone-api/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -14,10 +13,10 @@ type ChannelStore interface {
 	GetChannelByID(context.Context, string) (*types.Channel, error)
 	GetChannels(context.Context) ([]*types.Channel, error)
 	CreateChannel(context.Context, *types.Channel) (*types.Channel, error)
-	DeleteChannel(context.Context, string) error
+	DeleteChannel(ctx context.Context, id string, client *mongo.Client) error
 	Update(ctx context.Context, filter bson.M, update bson.M) error
 	Delete(ctx context.Context, channelID primitive.ObjectID, messageID primitive.ObjectID) error
-	DeleteServerChannels(ctx context.Context, client *mongo.Client, serverID primitive.ObjectID, server *types.Server)
+
 	//UpdateChannel(ctx context.Context, filter bson.M, params types.UpdateChannelParams) error
 }
 
@@ -45,23 +44,6 @@ func (s *MongoChannelStore) Delete(ctx context.Context, channelID primitive.Obje
 	update := bson.M{"$pull": bson.M{"messages": messageID}}
 	_, err := s.coll.UpdateOne(ctx, filter, update)
 	return err
-}
-
-func (s *MongoChannelStore) DeleteServerChannels(ctx context.Context, client *mongo.Client, serverID primitive.ObjectID, server *types.Server) {
-	for _, channelID := range server.Channels {
-		if _, err := client.Database(NAME).Collection(MESSAGE).DeleteMany(
-			ctx,
-			bson.M{"channelID": channelID},
-		); err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("deleted channelID:", channelID.Hex())
-	}
-	channelFilter := bson.M{"serverID": serverID}
-	_, err := s.coll.DeleteMany(ctx, channelFilter)
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func (s *MongoChannelStore) GetChannelByID(ctx context.Context, id string) (*types.Channel, error) {
@@ -104,13 +86,21 @@ func (s *MongoChannelStore) GetChannels(ctx context.Context) ([]*types.Channel, 
 	}
 	return channels, nil
 }
-func (s *MongoChannelStore) DeleteChannel(ctx context.Context, id string) error {
+func (s *MongoChannelStore) DeleteChannel(ctx context.Context, id string, client *mongo.Client) error {
 	channelID, err := primitive.ObjectIDFromHex(id)
+	channel, err := s.GetChannelByID(ctx, id)
+	for _, _ = range channel.Messages {
+		if _, err := client.Database(NAME).Collection(MESSAGE).DeleteMany(
+			ctx,
+			bson.M{"channelID": channelID},
+		); err != nil {
+			log.Fatal(err)
+		}
+	}
 	if err != nil {
 		return err
 	}
-	res, err := s.GetChannelByID(ctx, id)
-	if err := s.ServerStore.Delete(ctx, res.ServerID, channelID); err != nil {
+	if err := s.ServerStore.Delete(ctx, channel.ServerID, channelID); err != nil {
 		return err
 	}
 	_, err = s.coll.DeleteOne(ctx, bson.M{"_id": channelID})

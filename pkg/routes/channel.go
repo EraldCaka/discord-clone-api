@@ -5,9 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func ChannelRoutes(a *fiber.App, channelHandler *handlers.ChannelHandler) {
-	var route = a.Group("/discord/api/v1")
-
+func ChannelRoutes(a *fiber.App, channelHandler *handlers.ChannelHandler, route fiber.Router) {
 	route.Get("/channel/:id", channelHandler.HandleGetChannel)
 	route.Delete("/channel/:id", channelHandler.HandleDeleteChannel)
 	route.Post("/channel", channelHandler.HandleCreateChannel)

@@ -6,6 +6,7 @@ import (
 	"github.com/EraldCaka/discord-clone-api/types"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type ChannelHandler struct {
@@ -50,8 +51,10 @@ func (h *ChannelHandler) HandleCreateChannel(c *fiber.Ctx) error {
 	return c.JSON(createdChannel)
 }
 func (h *ChannelHandler) HandleDeleteChannel(c *fiber.Ctx) error {
+	client, _ := mongo.Connect(c.Context(), options.Client().ApplyURI(db.MONGODB))
 	channelID := c.Params("id")
-	if err := h.channelStore.DeleteChannel(c.Context(), channelID); err != nil {
+
+	if err := h.channelStore.DeleteChannel(c.Context(), channelID, client); err != nil {
 		return err
 	}
 	return c.JSON(map[string]string{"deleted": channelID})

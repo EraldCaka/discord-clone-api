@@ -5,6 +5,8 @@ import (
 	"flag"
 	"github.com/EraldCaka/discord-clone-api/db"
 	"github.com/EraldCaka/discord-clone-api/handlers"
+	"github.com/EraldCaka/discord-clone-api/pkg/errors"
+	"github.com/EraldCaka/discord-clone-api/pkg/middleware"
 	"github.com/EraldCaka/discord-clone-api/pkg/routes"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -12,21 +14,19 @@ import (
 	"log"
 )
 
-var configs = fiber.Config{
-	ErrorHandler: func(c *fiber.Ctx, err error) error {
-		return c.JSON(map[string]string{"error": err.Error()})
-	},
+var config = fiber.Config{
+	ErrorHandler: errors.ErrorHandler,
 }
 
 func main() {
-	listenAddr := flag.String("listenAddr", ":5000", "The listen address of the API server")
+	listenAddr := flag.String("listenAddr", ":5555", "The listen address of the API server")
 	flag.Parse()
 
 	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(db.MONGODB))
 	if err != nil {
 		log.Fatal(err)
 	}
-	app := fiber.New(configs)
+	app := fiber.New(config)
 
 	var (
 		userStore    = db.NewMongoUserStore(client)
@@ -41,11 +41,16 @@ func main() {
 		serverHandler  = handlers.NewServerHandler(serverStore)
 		channelHandler = handlers.NewChannelHandler(channelStore)
 		messageHandler = handlers.NewMessageHandler(messageStore)
+		authHandler    = middleware.NewAuthHandler(userStore)
 	)
-	routes.UserRoutes(app, userHandler)
-	routes.ServerRoutes(app, serverHandler)
-	routes.ChannelRoutes(app, channelHandler)
-	routes.MessageRoutes(app, messageHandler)
+	var route = app.Group("/discord/api/v1", middleware.JWTAuthentication(userStore))
+	var auth = app.Group("/discord/api")
+	route.Use(middleware.JWTAuthentication(userStore))
+	routes.AuthRoutes(app, authHandler, auth)
+	routes.UserRoutes(app, userHandler, route)
+	routes.ServerRoutes(app, serverHandler, route)
+	routes.ChannelRoutes(app, channelHandler, route)
+	routes.MessageRoutes(app, messageHandler, route)
 
 	listenErr := app.Listen(*listenAddr)
 	if listenErr != nil {

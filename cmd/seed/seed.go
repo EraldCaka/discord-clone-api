@@ -34,13 +34,10 @@ func main() {
 		Channel: channelStore,
 		Message: messageStore,
 	}
-	PopulateTables(store, 5)
+	PopulateTables(store)
 
 }
-func PopulateTables(store *db.Store, depth int) {
-	if depth <= 0 {
-		return
-	}
+func PopulateTables(store *db.Store) {
 
 	for i := 0; i < 5; i++ {
 		userID := PopulateUserTable(store, i)
