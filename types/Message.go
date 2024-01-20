@@ -32,7 +32,6 @@ type CreateMessageParams struct {
 	ChannelID primitive.ObjectID `json:"channelID"`
 	UserID    primitive.ObjectID `json:"userID"`
 	Content   string             `json:"content"`
-
 	//Channel         Channel            `json:"channel"`
 	//Attachments     []Attachment `json:"attachments"`
 	//Reactions       []Reaction   `json:"reactions"`

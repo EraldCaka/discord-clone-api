@@ -94,7 +94,7 @@ func (s *MongoServerStore) CreateServer(ctx context.Context, server *types.Serve
 	}
 	server.ID = res.InsertedID.(primitive.ObjectID)
 	filter := bson.M{"_id": server.UserID}
-	update := bson.M{"$push": bson.M{"channels": res.InsertedID}}
+	update := bson.M{"$push": bson.M{"ownedServers": res.InsertedID}}
 	//TODO FIX update since it is being directed to user not to channel store
 	if err := s.UserStore.Update(ctx, filter, update); err != nil {
 		return nil, err

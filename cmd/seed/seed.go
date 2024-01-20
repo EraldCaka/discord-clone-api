@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/EraldCaka/discord-clone-api/db"
 	"github.com/EraldCaka/discord-clone-api/db/fixtures"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -34,19 +35,30 @@ func main() {
 		Channel: channelStore,
 		Message: messageStore,
 	}
-	PopulateUserTable(store)
+	PopulateUserTable(store, client)
 }
 
-func PopulateUserTable(store *db.Store) {
+func PopulateUserTable(store *db.Store, client *mongo.Client) {
 	for i := 0; i < 20; i++ {
 		user := fixtures.AddUser(store, "user"+strconv.Itoa(i), "test1234"+strconv.Itoa(i), "I am a user", "test"+strconv.Itoa(i)+"@gmail.com")
 		log.Println(user.Username, "was created successfully")
 		PopulateServerTable(store, user.ID)
+		//AddServerOwnerID(db.NewMongoUserStore(client), serverID, user.ID)
 	}
 
 }
-func PopulateServerTable(store *db.Store, userID primitive.ObjectID) {
+func AddServerOwnerID(userStore *db.MongoUserStore, serverID primitive.ObjectID, userID primitive.ObjectID) {
+
+	userFilter := bson.M{"_id": userID}
+	userUpdate := bson.M{"$push": bson.M{"ownedServers": serverID}}
+	if err := userStore.Update(context.Background(), userFilter, userUpdate); err != nil {
+		log.Fatal(err)
+	}
+	log.Println("Server was assigned with a user successfully")
+}
+
+func PopulateServerTable(store *db.Store, userID primitive.ObjectID) primitive.ObjectID {
 	server := fixtures.AddServer(store, "server", userID, "europe", "afk-channel", "europe")
-	//TODO properly connect server seeding with the user seeding
 	log.Println(server.ServerName, "was created successfully")
+	return server.ID
 }
