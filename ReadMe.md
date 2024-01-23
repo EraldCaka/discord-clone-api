@@ -32,6 +32,11 @@ Store and retrieve data efficiently using MongoDB, a NoSQL database. Benefit fro
 
 Facilitate real-time messaging capabilities for a dynamic user experience. Implement features like private messages, group chats, and message notifications.
 
-- Message Service screenshot
+## Message Service screenshot
 
 ![image](https://github.com/EraldCaka/discord-clone-api/assets/96385473/399f0606-1c16-484d-a6d2-995b8430f7b7)
+
+## Messages per second
+the message service is able to handle approximately 5000 requests per second
+
+![image](https://github.com/EraldCaka/discord-clone-api/assets/96385473/278413f1-3bc8-4eb3-8207-ccda10a07f0e)
