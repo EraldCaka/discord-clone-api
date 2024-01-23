@@ -14,7 +14,7 @@ func main() {
 
 	for i := 0; i < 1000; i++ {
 		topic := topics[rand.Intn(len(topics))]
-		payload := []byte(fmt.Sprintf("foobarbaz_%d", i))
+		payload := []byte(fmt.Sprintf("message_payload_%d", i))
 		resp, err := http.Post(url+"/"+topic, "application/octet-stream", bytes.NewReader(payload))
 		if err != nil {
 			log.Fatal(err)
