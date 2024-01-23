@@ -18,7 +18,6 @@ func JWTAuthentication(userStore db.UserStore) fiber.Handler {
 		if token == "" {
 			return errors.NewError(http.StatusUnauthorized, "unAuthorized token not present in the header")
 		}
-		fmt.Println(token)
 		claims, err := validateToken(token)
 		if err != nil {
 			return err

@@ -36,22 +36,22 @@ func NewMongoUserStore(client *mongo.Client) *MongoUserStore {
 		coll:   client.Database(NAME).Collection(USER),
 	}
 }
-func (s MongoUserStore) Drop(ctx context.Context) error {
+func (s *MongoUserStore) Drop(ctx context.Context) error {
 	fmt.Println("--- dropping user collection")
 	return s.coll.Drop(ctx)
 }
-func (s MongoUserStore) Update(ctx context.Context, filter bson.M, update bson.M) error {
+func (s *MongoUserStore) Update(ctx context.Context, filter bson.M, update bson.M) error {
 	_, err := s.coll.UpdateOne(ctx, filter, update)
 	return err
 }
 
-func (s MongoUserStore) Delete(ctx context.Context, userID primitive.ObjectID, serverID primitive.ObjectID) error {
+func (s *MongoUserStore) Delete(ctx context.Context, userID primitive.ObjectID, serverID primitive.ObjectID) error {
 	filter := bson.M{"_id": userID}
 	update := bson.M{"$pull": bson.M{"ownedServers": serverID}}
 	_, err := s.coll.UpdateOne(ctx, filter, update)
 	return err
 }
-func (s MongoUserStore) GetUserByID(ctx context.Context, id string) (*types.User, error) {
+func (s *MongoUserStore) GetUserByID(ctx context.Context, id string) (*types.User, error) {
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func (s MongoUserStore) GetUserByID(ctx context.Context, id string) (*types.User
 	return &user, nil
 }
 
-func (s MongoUserStore) GetUsers(ctx context.Context) ([]*types.User, error) {
+func (s *MongoUserStore) GetUsers(ctx context.Context) ([]*types.User, error) {
 	cur, err := s.coll.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func (s MongoUserStore) GetUsers(ctx context.Context) ([]*types.User, error) {
 	return users, nil
 }
 
-func (s MongoUserStore) CreateUser(ctx context.Context, user *types.User) (*types.User, error) {
+func (s *MongoUserStore) CreateUser(ctx context.Context, user *types.User) (*types.User, error) {
 	res, err := s.coll.InsertOne(ctx, user)
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func (s MongoUserStore) CreateUser(ctx context.Context, user *types.User) (*type
 	return user, nil
 }
 
-func (s MongoUserStore) DeleteUser(ctx context.Context, client *mongo.Client, server []*types.Server, user *types.User) error {
+func (s *MongoUserStore) DeleteUser(ctx context.Context, client *mongo.Client, server []*types.Server, user *types.User) error {
 	for _, serverID := range user.OwnedServers {
 		for _, serverObj := range server {
 			if serverObj.ID.Hex() == serverID.Hex() {
@@ -126,7 +126,7 @@ func (s MongoUserStore) DeleteUser(ctx context.Context, client *mongo.Client, se
 	return nil
 }
 
-func (s MongoUserStore) UpdateUser(ctx context.Context, filter bson.M, params types.UpdateUserParams) error {
+func (s *MongoUserStore) UpdateUser(ctx context.Context, filter bson.M, params types.UpdateUserParams) error {
 	update := bson.D{
 		{
 			"$set", params.ToBSON(),
@@ -140,7 +140,7 @@ func (s MongoUserStore) UpdateUser(ctx context.Context, filter bson.M, params ty
 	return nil
 }
 
-func (s MongoUserStore) GetUserByEmail(ctx context.Context, email string) (*types.User, error) {
+func (s *MongoUserStore) GetUserByEmail(ctx context.Context, email string) (*types.User, error) {
 	var user types.User
 	if err := s.coll.FindOne(ctx, bson.M{"email": email}).Decode(&user); err != nil {
 		return nil, err

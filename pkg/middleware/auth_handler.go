@@ -45,9 +45,6 @@ func invalidCredentials(c *fiber.Ctx) error {
 	})
 }
 
-/*
-AuthParams are the login details that the user will input
-*/
 func (h *AuthHandler) HandleAuthenticate(c *fiber.Ctx) error {
 	var params AuthParams
 	if err := c.BodyParser(&params); err != nil {
