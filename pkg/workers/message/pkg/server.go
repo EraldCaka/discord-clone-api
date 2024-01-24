@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 )
@@ -17,9 +18,7 @@ type Config struct {
 
 type Server struct {
 	*Config
-
-	topics map[string]Storer
-
+	topics    map[string]Storer
 	consumers []Consumer
 	producers []Producer
 	producech chan *Message
@@ -73,7 +72,11 @@ func (s *Server) loop() {
 
 func (s *Server) publish(msg *Message) (int, error) {
 	store := s.getStoreForTopic(msg.Topic)
-	return store.Push(msg.Data)
+	data, err := json.Marshal(msg.Data)
+	if err != nil {
+		return 0, err
+	}
+	return store.Push(data)
 }
 
 func (s *Server) getStoreForTopic(topic string) Storer {
